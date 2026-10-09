@@ -1,0 +1,117 @@
+<div class="card">
+        <h3>টাকা উত্তোলন (Withdraw)</h3>
+        <p class="info-text">সর্বনিম্ন উইথড্র <b>৳১০০.০০</b> (বিকাশ এবং নগদ)</p>
+        
+        <select id="paymentMethod">
+            <option value="Bkash">বিকাশ (bKash)</option>
+            <option value="Nagad">নগদ (Nagad)</option>
+        </select>
+        
+        <input type="text" id="accountNumber" placeholder="মোবাইল নম্বর লিখুন" />
+        <input type="number" id="withdrawAmount" placeholder="টাকার পরিমাণ (সর্বনিম্ন ১০০)" />
+
+        <button class="btn btn-withdraw" onclick="requestWithdrawal()">উইথড্র রিকোয়েস্ট পাঠান</button>
+    </div>
+</div>
+
+<script>
+    // Initialize Telegram Web App
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+
+    // User details & local storage key
+    const user = tg.initDataUnsafe?.user;
+    const userId = user ? user.id : "guest_user";
+    const storageKey = 'user_balance_' + userId;
+
+    // Load Balance from LocalStorage (or default 0)
+    let balance = parseFloat(localStorage.getItem(storageKey)) || 0.00;
+    updateBalanceDisplay();
+
+    // Check Referral Reward on start
+    checkReferralBonus();
+
+    function updateBalanceDisplay() {
+        document.getElementById('balance').innerText = balance.toFixed(2);
+        localStorage.setItem(storageKey, balance);
+    }
+
+    // 1. Monetag Rewarded Ad System
+    function watchAd() {
+        if (typeof show_11990145 === 'function') {
+            show_11990145('pop').then(() => {
+                balance += 0.50;
+                updateBalanceDisplay();
+                alert("অভিনন্দন! আপনি ৫০ পয়সা পেয়েছেন।");
+            }).catch(e => {
+                alert("বিজ্ঞাপন লোড হতে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।");
+            });
+        } else {
+            alert("বিজ্ঞাপন নেটওয়ার্ক যুক্ত করা সম্ভব হয়নি।");
+        }
+    }
+
+    // 2. Task System (1 Taka reward)
+    function completeTask() {
+        balance += 1.00;
+        updateBalanceDisplay();
+        alert("টাস্ক সফলভাবে সম্পন্ন হয়েছে! আপনি ১ টাকা পেয়েছেন।");
+    }
+
+    // 3. Referral System (10 Taka reward)
+    const botUsername = "YOUR_BOT_USERNAME"; // আপনার টেলিগ্রাম বটের ইউজারনেম দিন (@ ছাড়া)
+    const referUrl = https://t.me/${botUsername}?start=ref_${userId};
+    document.getElementById('refLink').innerText = referUrl;
+
+    function copyReferLink() {
+        navigator.clipboard.writeText(referUrl);
+        alert("রেফার লিংক কপি করা হয়েছে!");
+    }
+
+    function checkReferralBonus() {
+        const startParam = tg.initDataUnsafe?.start_param;
+        const refClaimedKey = 'ref_claimed_' + userId;
+
+        if (startParam && startParam.startsWith('ref_') && !localStorage.getItem(refClaimedKey)) {
+            balance += 10.00;
+            updateBalanceDisplay();
+            localStorage.setItem(refClaimedKey, 'true');
+            alert("রেফারাল লিংকের মাধ্যমে যোগ দেওয়ায় আপনি ১০ টাকা বোনাস পেয়েছেন!");
+        }
+    }
+
+    // 4. Withdrawal System (bKash / Nagad - Min 100 BDT)
+    function requestWithdrawal() {
+        const method = document.getElementById('paymentMethod').value;
+        const number = document.getElementById('accountNumber').value.trim();
+        const amount = parseFloat(document.getElementById('withdrawAmount').value);
+
+        if (!number) {
+            alert("অনুগ্রহ করে আপনার " + method + " মোবাইল নম্বরটি লিখুন।");
+            return;
+        }
+
+        if (isNaN(amount) || amount < 100) {
+            alert("সর্বনিম্ন উইথড্র ১০০ টাকা হতে হবে।");
+            return;
+        }
+
+        if (amount > balance) {
+            alert("আপনার অ্যাকাউন্টে পর্যাপ্ত ব্যালেন্স নেই!");
+            return;
+        }
+
+        // Deduct balance and update
+        balance -= amount;
+        updateBalanceDisplay();
+
+        // Clear input fields
+        document.getElementById('accountNumber').value = '';
+        document.getElementById('withdrawAmount').value = '';
+
+        alert(আপনার ${amount} টাকার উইথড্র রিকোয়েস্ট (${method}: ${number}) সফলভাবে জমা হয়েছে!);
+    }
+</script>
+
+</body>
+</html>
